@@ -22,16 +22,20 @@
 #endif
 
 #include "Kaleidoscope.h"
+#include "Kaleidoscope/keyswitch_state.h"
+#include "Kaleidoscope/Runtime.h"
+#include "Kaleidoscope-AutoShift.h"
 #include "Kaleidoscope-EEPROM-Settings.h"
 #include "Kaleidoscope-EEPROM-Keymap.h"
 #include "Kaleidoscope-Escape-OneShot.h"
 #include "Kaleidoscope-FirmwareVersion.h"
 #include "Kaleidoscope-FocusSerial.h"
+#include "Kaleidoscope-HostOS.h"
 #include "Kaleidoscope-Macros.h"
-#include "Kaleidoscope-MouseKeys.h"
 #include "Kaleidoscope-OneShot.h"
 #include "Kaleidoscope-Qukeys.h"
 #include "Kaleidoscope-SpaceCadet.h"
+#include "Kaleidoscope-TapDance.h"
 #include "Kaleidoscope-DynamicMacros.h"
 #include "Kaleidoscope-LayerNames.h"
 
@@ -53,10 +57,18 @@ enum {
 #define Key_Star        LSHIFT(Key_8)
 #define Key_Plus        LSHIFT(Key_Equals)
 
+// TapDance custom keys
+#define TD_Space     TD(0)
+#define TD_Backtick  TD(1)
+#define TD_Enter     TD(2)
+#define TD_Backslash TD(3)
+
 enum {
   QWERTY,
-  FUN,
-  UPPER
+  QWERTY_WIN,
+  NUM,
+  UPPER,
+  NOITA
 };
 
 // clang-format off
@@ -65,40 +77,65 @@ KEYMAPS(
   (
        Key_Q   ,Key_W   ,Key_E       ,Key_R         ,Key_T
       ,Key_A   ,Key_S   ,Key_D       ,Key_F         ,Key_G
-      ,Key_Z   ,Key_X   ,Key_C       ,Key_V         ,Key_B, Key_Backtick
-      ,Key_Esc ,Key_Tab ,Key_LeftGui ,Key_LeftShift ,Key_Backspace ,Key_LeftControl
+      ,Key_Z   ,Key_X   ,Key_C       ,Key_V         ,Key_B    ,TD_Backtick
+      ,Key_LeftShift ,Key_LeftBracket ,Key_RightBracket ,TG(NUM) ,TD_Space ,Key_LeftGui
 
                      ,Key_Y     ,Key_U      ,Key_I     ,Key_O      ,Key_P
                      ,Key_H     ,Key_J      ,Key_K     ,Key_L      ,Key_Semicolon
-       ,Key_Backslash,Key_N     ,Key_M      ,Key_Comma ,Key_Period ,Key_Slash
-       ,Key_LeftAlt  ,Key_Space ,MO(FUN)    ,Key_Minus ,Key_Quote  ,Key_Enter
+       ,TD_Backslash ,Key_N     ,Key_M      ,Key_Comma ,Key_Period ,Key_Slash
+       ,Key_Tab      ,TD_Enter  ,MO(NUM)    ,Key_Quote ,Key_Minus  ,Key_RightShift
+  ),
+  [QWERTY_WIN] = KEYMAP_STACKED
+  (
+       Key_Q   ,Key_W   ,Key_E       ,Key_R         ,Key_T
+      ,Key_A   ,Key_S   ,Key_D       ,Key_F         ,Key_G
+      ,Key_Z   ,Key_X   ,Key_C       ,Key_V         ,Key_B    ,TD_Backtick
+      ,Key_LeftShift ,Key_LeftBracket ,Key_RightBracket ,TG(NUM) ,TD_Space ,Key_LeftControl
+
+                     ,Key_Y     ,Key_U      ,Key_I     ,Key_O      ,Key_P
+                     ,Key_H     ,Key_J      ,Key_K     ,Key_L      ,Key_Semicolon
+       ,TD_Backslash ,Key_N     ,Key_M      ,Key_Comma ,Key_Period ,Key_Slash
+       ,Key_Tab      ,TD_Enter  ,TG(NUM)    ,Key_Quote ,Key_Minus  ,Key_RightShift
   ),
 
-  [FUN] = KEYMAP_STACKED
+  [NUM] = KEYMAP_STACKED
   (
-       Key_Exclamation ,Key_At           ,Key_UpArrow   ,Key_Dollar           ,Key_Percent
-      ,Key_LeftParen   ,Key_LeftArrow    ,Key_DownArrow ,Key_RightArrow       ,Key_RightParen
-      ,Key_LeftBracket ,Key_RightBracket ,Key_Hash      ,Key_LeftCurlyBracket ,Key_RightCurlyBracket ,Key_Caret
-      ,TG(UPPER)       ,Key_Insert       ,Key_LeftGui   ,Key_LeftShift        ,Key_Delete         ,Key_LeftControl
+       Key_Exclamation ,Key_At           ,Key_Hash      ,Key_Dollar          ,Key_Percent
+      ,Key_LeftArrow   ,Key_DownArrow    ,Key_UpArrow   ,Key_RightArrow      ,Key_Delete
+      ,Key_Home        ,Key_End          ,Key_PageUp    ,Key_PageDown        ,Key_Quote ,Key_Backtick
+      ,TG(UPPER)       ,___       ,___           ,___        ,___         ,___
 
-                   ,Key_PageUp   ,Key_7 ,Key_8      ,Key_9 ,Key_Backspace
-                   ,Key_PageDown ,Key_4 ,Key_5      ,Key_6 ,___
-      ,Key_And     ,Key_Star     ,Key_1 ,Key_2      ,Key_3 ,Key_Plus
-      ,Key_LeftAlt ,Key_Space    ,___   ,Key_Period ,Key_0 ,Key_Equals
+              ,Key_And    ,Key_7 ,Key_8      ,Key_9 ,LSHIFT(Key_9)
+              ,Key_Equals ,Key_4 ,Key_5      ,Key_6 ,LSHIFT(Key_0)
+      ,Key_Backslash    ,Key_Star   ,Key_1 ,Key_2      ,Key_3 ,___
+      ,___         ,___   ,Key_0 ,Key_Period ,Key_Minus  ,___
    ),
 
   [UPPER] = KEYMAP_STACKED
   (
        Key_Insert            ,Key_Home                 ,Key_UpArrow   ,Key_End        ,Key_PageUp
       ,Key_Delete            ,Key_LeftArrow            ,Key_DownArrow ,Key_RightArrow ,Key_PageDown
-      ,M(MACRO_VERSION_INFO) ,Consumer_VolumeIncrement ,XXX           ,XXX            ,___ ,___
-      ,MoveToLayer(QWERTY)   ,Consumer_VolumeDecrement ,___           ,___            ,___ ,___
+      ,M(MACRO_VERSION_INFO) ,Consumer_VolumeIncrement ,___           ,___            ,___ ,___
+      ,M(MACRO_QWERTY)       ,Consumer_VolumeDecrement ,___           ,___            ,___ ,MoveToLayer(NOITA)
 
-                ,Key_UpArrow   ,Key_F7              ,Key_F8          ,Key_F9         ,Key_F10
-                ,Key_DownArrow ,Key_F4              ,Key_F5          ,Key_F6         ,Key_F11
-      ,___      ,XXX           ,Key_F1              ,Key_F2          ,Key_F3         ,Key_F12
-      ,___      ,___           ,MoveToLayer(QWERTY) ,Key_PrintScreen ,Key_ScrollLock ,Consumer_PlaySlashPause
-   )
+                ,Key_UpArrow   ,Key_F7           ,Key_F8          ,Key_F9         ,Key_F10
+                ,Key_DownArrow ,Key_F4           ,Key_F5          ,Key_F6         ,Key_F11
+      ,___      ,___           ,Key_F1           ,Key_F2          ,Key_F3         ,Key_F12
+      ,___      ,___           ,M(MACRO_QWERTY) ,Key_PrintScreen ,Key_ScrollLock ,Consumer_PlaySlashPause
+   ),
+
+  [NOITA] = KEYMAP_STACKED
+  (
+       Key_1   ,Key_I   ,Key_W       ,Key_E         ,Key_Esc
+      ,Key_2   ,Key_A   ,Key_S       ,Key_D         ,Key_F
+      ,Key_3   ,Key_5   ,Key_6       ,Key_7         ,Key_8         ,Key_Esc
+      ,Key_4   ,Key_7   ,Key_8       ,XXX           ,XXX           ,Key_Esc
+
+                           ,Key_VolumeUp  ,XXX           ,XXX           ,XXX ,MoveToLayer(QWERTY)
+                           ,Key_VolumeDown,Key_DownArrow ,Key_UpArrow   ,XXX ,MoveToLayer(UPPER)
+       ,XXX                ,Key_Mute      ,Key_LeftArrow ,Key_RightArrow,XXX ,MoveToLayer(NUM)
+       ,M(MACRO_QWERTY)    ,XXX           ,XXX           ,XXX           ,XXX ,M(MACRO_QWERTY)
+  )
 )
 // clang-format on
 
@@ -109,7 +146,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
   // The EEPROMSettings & EEPROMKeymap plugins make it possible to have an
   // editable keymap in EEPROM.
   EEPROMSettings,
-  EEPROMKeymap,
+  // EEPROMKeymap,
 
   // Focus allows bi-directional communication with the host, and is the
   // interface through which the keymap in EEPROM can be edited.
@@ -130,7 +167,7 @@ KALEIDOSCOPE_INIT_PLUGINS(
 
   // The LayerNames plugin allows Chrysalis to display - and edit - custom layer
   // names, to be shown instead of the default indexes.
-  LayerNames,
+  // LayerNames,
 
   // ----------------------------------------------------------------------
   // Keystroke-handling plugins
@@ -138,30 +175,29 @@ KALEIDOSCOPE_INIT_PLUGINS(
   // The Qukeys plugin enables the "Secondary action" functionality in
   // Chrysalis. Keys with secondary actions will have their primary action
   // performed when tapped, but the secondary action when held.
-  Qukeys,
+  // Qukeys,
 
   // SpaceCadet can turn your shifts into parens on tap, while keeping them as
   // Shifts when held. SpaceCadetConfig lets Chrysalis configure some aspects of
   // the plugin.
   SpaceCadet,
-  SpaceCadetConfig,
+  // SpaceCadetConfig,
 
   // Enables the "Sticky" behavior for modifiers, and the "Layer shift when
   // held" functionality for layer keys.
-  OneShot,
-  OneShotConfig,
-  EscapeOneShot,
-  EscapeOneShotConfig,
+  // OneShot,
+  // OneShotConfig,
+  // EscapeOneShot,
+  // EscapeOneShotConfig,
 
   // The macros plugin adds support for macros
   Macros,
 
   // Enables dynamic, Chrysalis-editable macros.
-  DynamicMacros,
+  // DynamicMacros
 
-  // The MouseKeys plugin lets you add keys to your keymap which move the mouse.
-  MouseKeys,
-  MouseKeysConfig  //,
+  TapDance,
+  AutoShift
 
   // The MagicCombo plugin lets you use key combinations to trigger custom
   // actions - a bit like Macros, but triggered by pressing multiple keys at the
@@ -173,15 +209,34 @@ KALEIDOSCOPE_INIT_PLUGINS(
   // GeminiPR,
 );
 
+void setDefaultLayerForHostOS() {
+  switch (HostOS.os()) {
+  case kaleidoscope::hostos::WINDOWS:
+    EEPROMSettings.default_layer(QWERTY_WIN);
+    break;
+  default:
+    EEPROMSettings.default_layer(QWERTY);
+    break;
+  }
+}
+
+void toggleHostOsAndReset() {
+  switch (HostOS.os()) {
+  case kaleidoscope::hostos::WINDOWS:
+    HostOS.os(kaleidoscope::hostos::MACOS);
+    break;
+  default:
+    HostOS.os(kaleidoscope::hostos::WINDOWS);
+    break;
+  }
+  kaleidoscope::Runtime.rebootBootloader();
+}
+
 const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
   if (keyToggledOn(event.state)) {
     switch (macro_id) {
     case MACRO_QWERTY:
-      // This macro is currently unused, but is kept around for compatibility
-      // reasons. We used to use it in place of `MoveToLayer(QWERTY)`, but no
-      // longer do. We keep it so that if someone still has the old layout with
-      // the macro in EEPROM, it will keep working after a firmware update.
-      Layer.move(QWERTY);
+      Layer.move(EEPROMSettings.default_layer());
       break;
     case MACRO_VERSION_INFO:
       Macros.type(PSTR("Keyboardio Atreus - Kaleidoscope "));
@@ -194,20 +249,142 @@ const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
   return MACRO_NONE;
 }
 
+void handleTapDanceSpace(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
+  switch (tap_dance_action) {
+  case kaleidoscope::plugin::TapDance::ActionType::Hold:
+    tapDanceActionKeys(tap_count, tap_dance_action, Key_LeftControl, Key_LeftAlt, LSHIFT(ML(LeftGui, NUM)));
+    break;
+  case kaleidoscope::plugin::TapDance::ActionType::Interrupt:
+  case kaleidoscope::plugin::TapDance::ActionType::Timeout:
+    tapDanceActionKeys(tap_count, tap_dance_action, Key_Space);
+    break;
+  }
+}
+
+void handleTapDanceEnter(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
+  switch (tap_dance_action) {
+  case kaleidoscope::plugin::TapDance::ActionType::Hold:
+    tapDanceActionKeys(tap_count, tap_dance_action, Key_RightControl, Key_RightAlt, ML(LeftGui, NUM));
+    break;
+  case kaleidoscope::plugin::TapDance::ActionType::Interrupt:
+  case kaleidoscope::plugin::TapDance::ActionType::Timeout:
+    tapDanceActionKeys(tap_count, tap_dance_action, Key_Enter);
+    break;
+  }
+}
+
+void handleTapDanceBacktick(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
+  switch (tap_dance_action) {
+  case kaleidoscope::plugin::TapDance::ActionType::Hold:
+
+    tapDanceActionKeys(tap_count, tap_dance_action, LSHIFT(Key_Backtick), ML(LeftControl, NUM), ML(LeftAlt, NUM));
+
+    if (tap_count == 4) {  // Beethoven's 5th
+      AutoShift.toggle();
+    }
+    break;
+  case kaleidoscope::plugin::TapDance::ActionType::Interrupt:
+  case kaleidoscope::plugin::TapDance::ActionType::Timeout:
+    tapDanceActionKeys(tap_count, tap_dance_action, Key_Backtick, Key_Esc, LCTRL(LALT(Key_Delete)));
+    break;
+  default:
+    return;
+  }
+}
+
+void handleTapDanceBackslash(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
+  switch (tap_dance_action) {
+  case kaleidoscope::plugin::TapDance::ActionType::Hold:
+    if (tap_count == 4) {  // Beethoven's 5th
+      toggleHostOsAndReset();
+    }
+    tapDanceActionKeys(tap_count, tap_dance_action, LSHIFT(Key_Backslash), LGUI(Key_LeftAlt));
+    break;
+  case kaleidoscope::plugin::TapDance::ActionType::Interrupt:
+  case kaleidoscope::plugin::TapDance::ActionType::Timeout:
+    tapDanceActionKeys(tap_count, tap_dance_action, Key_Backslash, Key_CapsLock);
+    break;
+  }
+}
+
+void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
+  if (tap_dance_action == kaleidoscope::plugin::TapDance::ActionType::Tap) {
+    // Immediately cancel any in-progress AutoShift delay
+    // If you don't do this, hanging stickiness upper-cases letters at the ends of words
+    // before whitespace characters that this configuration uses as TapDance items.
+    // e.g. SentenceS maY looK likE this>
+    KeyEvent event{key_addr, IS_PRESSED, Key_Esc};
+    AutoShift.onKeyswitchEvent(event);
+  }
+  switch (tap_dance_index) {
+  case 0:
+    handleTapDanceSpace(tap_count, tap_dance_action);
+    break;
+  case 1:
+    handleTapDanceBacktick(tap_count, tap_dance_action);
+    break;
+  case 2:
+    handleTapDanceEnter(tap_count, tap_dance_action);
+    break;
+  case 3:
+    handleTapDanceBackslash(tap_count, tap_dance_action);
+    break;
+  }
+}
+
+void setupSpaceCadet() {
+  if (EEPROMSettings.default_layer() == QWERTY) {
+    static kaleidoscope::plugin::SpaceCadet::KeyBinding bindings[] = {
+      {Key_LeftShift, Key_LeftParen, 120},
+      {Key_RightShift, Key_RightParen, 120},
+      {Key_LeftGui, Key_Backspace, 120},
+      SPACECADET_MAP_END};
+    SpaceCadet.setMap(bindings);
+  } else {
+    static kaleidoscope::plugin::SpaceCadet::KeyBinding bindings[] = {
+      {Key_LeftShift, Key_LeftParen, 120},
+      {Key_RightShift, Key_RightParen, 120},
+      {Key_LeftControl, Key_Backspace, 120},
+      SPACECADET_MAP_END};
+    SpaceCadet.setMap(bindings);
+  }
+}
+
+namespace kaleidoscope {
+namespace plugin {
+bool AutoShift::isAutoShiftable(Key key) {
+  if (key == Key_Tab) {
+    return true;  // I like an easy back-tab, ok?
+  }
+
+  // These interfere with TapDance! (TD_Backtick, TD_Backslash)
+  Key strippedKey = Key{key.getKeyCode(), KEY_FLAGS};
+  if (strippedKey == Key_Backtick || strippedKey == Key_Backslash || strippedKey == Key_Space || strippedKey == Key_Enter) {
+    return false;
+  }
+
+  return enabledForKey(key);
+}
+}  // namespace plugin
+}  // namespace kaleidoscope
+
 void setup() {
   Kaleidoscope.setup();
-  EEPROMKeymap.setup(9);
 
-  DynamicMacros.reserve_storage(48);
+  setDefaultLayerForHostOS();
+  // EEPROMKeymap.setup(9);
 
-  LayerNames.reserve_storage(63);
+  // DynamicMacros.reserve_storage(48);
+
+  // LayerNames.reserve_storage(63);
 
   Layer.move(EEPROMSettings.default_layer());
 
-  // To avoid any surprises, SpaceCadet is turned off by default. However, it
-  // can be permanently enabled via Chrysalis, so we should only disable it if
-  // no configuration exists.
-  SpaceCadetConfig.disableSpaceCadetIfUnconfigured();
+  TapDance.setTimeout(185);  // -- default is 200...
+  AutoShift.enable(AutoShift.printableKeys());
+  AutoShift.setTimeout(140);
+
+  setupSpaceCadet();
 }
 
 void loop() {
