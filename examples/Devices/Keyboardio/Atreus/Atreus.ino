@@ -100,28 +100,28 @@ KEYMAPS(
 
   [NUM] = KEYMAP_STACKED
   (
-       Key_Exclamation ,Key_At           ,Key_Hash      ,Key_Dollar          ,Key_Percent
-      ,Key_LeftArrow   ,Key_DownArrow    ,Key_UpArrow   ,Key_RightArrow      ,Key_Delete
-      ,Key_Home        ,Key_End          ,Key_PageUp    ,Key_PageDown        ,Key_Quote ,Key_Backtick
-      ,TG(UPPER)       ,___       ,___           ,___        ,___         ,___
+       Key_PageUp   ,Key_Home      ,Key_UpArrow   ,Key_End        ,Key_Copy
+      ,Key_PageDown ,Key_LeftArrow ,Key_DownArrow ,Key_RightArrow ,Key_Paste
+      ,Key_Home     ,Key_End       ,Consumer_VolumeIncrement      ,Consumer_VolumeDecrement  ,Consumer_Mute ,___
+      ,TG(UPPER)    ,___       ,___           ,___        ,___         ,___
 
               ,Key_And    ,Key_7 ,Key_8      ,Key_9 ,LSHIFT(Key_9)
               ,Key_Equals ,Key_4 ,Key_5      ,Key_6 ,LSHIFT(Key_0)
-      ,Key_Backslash    ,Key_Star   ,Key_1 ,Key_2      ,Key_3 ,___
+      ,___    ,Key_Star   ,Key_1 ,Key_2     ,Key_3 ,___
       ,___         ,___   ,Key_0 ,Key_Period ,Key_Minus  ,___
    ),
 
   [UPPER] = KEYMAP_STACKED
   (
-       Key_Insert            ,Key_Home                 ,Key_UpArrow   ,Key_End        ,Key_PageUp
-      ,Key_Delete            ,Key_LeftArrow            ,Key_DownArrow ,Key_RightArrow ,Key_PageDown
-      ,M(MACRO_VERSION_INFO) ,Consumer_VolumeIncrement ,___           ,___            ,___ ,___
-      ,M(MACRO_QWERTY)       ,Consumer_VolumeDecrement ,___           ,___            ,___ ,MoveToLayer(NOITA)
+       ___ ,___ ,___ ,___ ,___
+      ,___ ,___ ,___ ,___ ,___
+      ,___ ,___ ,___ ,___ ,___ ,___
+      ,M(MACRO_QWERTY) ,___ ,___ ,___ ,___ ,MoveToLayer(NOITA)
 
                 ,Key_UpArrow   ,Key_F7           ,Key_F8          ,Key_F9         ,Key_F10
                 ,Key_DownArrow ,Key_F4           ,Key_F5          ,Key_F6         ,Key_F11
       ,___      ,___           ,Key_F1           ,Key_F2          ,Key_F3         ,Key_F12
-      ,___      ,___           ,M(MACRO_QWERTY) ,Key_PrintScreen ,Key_ScrollLock ,Consumer_PlaySlashPause
+      ,___      ,___           ,___ ,___ ,___ ,M(MACRO_QWERTY)
    ),
 
   [NOITA] = KEYMAP_STACKED
