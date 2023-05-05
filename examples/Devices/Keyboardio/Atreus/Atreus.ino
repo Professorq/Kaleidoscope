@@ -62,6 +62,7 @@ enum {
 #define TD_Backtick  TD(1)
 #define TD_Enter     TD(2)
 #define TD_Backslash TD(3)
+#define TD_NumFun    TD(4)
 
 enum {
   QWERTY,
@@ -83,7 +84,7 @@ KEYMAPS(
                      ,Key_Y     ,Key_U      ,Key_I     ,Key_O      ,Key_P
                      ,Key_H     ,Key_J      ,Key_K     ,Key_L      ,Key_Semicolon
        ,TD_Backslash ,Key_N     ,Key_M      ,Key_Comma ,Key_Period ,Key_Slash
-       ,Key_Tab      ,TD_Enter  ,MO(NUM)    ,Key_Quote ,Key_Minus  ,Key_RightShift
+       ,Key_Tab      ,TD_Enter  ,TD_NumFun  ,Key_Quote ,Key_Minus  ,Key_RightShift
   ),
   [QWERTY_WIN] = KEYMAP_STACKED
   (
@@ -307,6 +308,18 @@ void handleTapDanceBackslash(uint8_t tap_count, kaleidoscope::plugin::TapDance::
   }
 }
 
+void handleTapDanceNumFun(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
+  switch (tap_dance_action) {
+  case kaleidoscope::plugin::TapDance::ActionType::Hold:
+    tapDanceActionKeys(tap_count, tap_dance_action, MO(NUM), MO(UPPER));
+    break;
+  case kaleidoscope::plugin::TapDance::ActionType::Interrupt:
+  case kaleidoscope::plugin::TapDance::ActionType::Timeout:
+    tapDanceActionKeys(tap_count, tap_dance_action, Key_0);
+    break;
+  }
+}
+
 void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
   if (tap_dance_action == kaleidoscope::plugin::TapDance::ActionType::Tap) {
     // Immediately cancel any in-progress AutoShift delay
@@ -328,6 +341,9 @@ void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count
     break;
   case 3:
     handleTapDanceBackslash(tap_count, tap_dance_action);
+    break;
+  case 4:
+    handleTapDanceNumFun(tap_count, tap_dance_action);
     break;
   }
 }
@@ -380,7 +396,7 @@ void setup() {
 
   Layer.move(EEPROMSettings.default_layer());
 
-  TapDance.setTimeout(185);  // -- default is 200...
+  TapDance.setTimeout(160);  // -- default is 200...
   AutoShift.enable(AutoShift.printableKeys());
   AutoShift.setTimeout(140);
 
