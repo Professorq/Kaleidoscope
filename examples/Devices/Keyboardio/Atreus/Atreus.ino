@@ -84,7 +84,7 @@ KEYMAPS(
                      ,Key_Y     ,Key_U      ,Key_I     ,Key_O      ,Key_P
                      ,Key_H     ,Key_J      ,Key_K     ,Key_L      ,Key_Semicolon
        ,TD_Backslash ,Key_N     ,Key_M      ,Key_Comma ,Key_Period ,Key_Slash
-       ,Key_Tab      ,TD_Enter  ,TD_NumFun  ,Key_Quote ,Key_Minus  ,Key_RightShift
+       ,Key_Tab      ,TD_Enter  ,TD_NumFun  ,Key_Minus ,Key_Quote  ,Key_RightShift
   ),
   [QWERTY_WIN] = KEYMAP_STACKED
   (
@@ -96,14 +96,14 @@ KEYMAPS(
                      ,Key_Y     ,Key_U      ,Key_I     ,Key_O      ,Key_P
                      ,Key_H     ,Key_J      ,Key_K     ,Key_L      ,Key_Semicolon
        ,TD_Backslash ,Key_N     ,Key_M      ,Key_Comma ,Key_Period ,Key_Slash
-       ,Key_Tab      ,TD_Enter  ,TG(NUM)    ,Key_Quote ,Key_Minus  ,Key_RightShift
+       ,Key_Tab      ,TD_Enter  ,TD_NumFun  ,Key_Minus ,Key_Quote  ,Key_RightShift
   ),
 
   [NUM] = KEYMAP_STACKED
   (
        Key_PageUp   ,Key_Home      ,Key_UpArrow   ,Key_End        ,Key_Copy
       ,Key_PageDown ,Key_LeftArrow ,Key_DownArrow ,Key_RightArrow ,Key_Paste
-      ,Key_Home     ,Key_End       ,Consumer_VolumeIncrement      ,Consumer_VolumeDecrement  ,Consumer_Mute ,___
+      ,Key_Home     ,Key_End       ,Consumer_VolumeDecrement ,Consumer_VolumeIncrement      ,Consumer_Mute ,___
       ,TG(UPPER)    ,___       ,___           ,___        ,___         ,___
 
               ,Key_And    ,Key_7 ,Key_8      ,Key_9 ,LSHIFT(Key_9)
@@ -132,7 +132,7 @@ KEYMAPS(
       ,Key_3   ,Key_5   ,Key_6       ,Key_7         ,Key_8         ,Key_Esc
       ,Key_4   ,Key_7   ,Key_8       ,XXX           ,XXX           ,Key_Esc
 
-                           ,Key_VolumeUp  ,XXX           ,XXX           ,XXX ,MoveToLayer(QWERTY)
+                           ,Key_VolumeUp  ,XXX           ,XXX           ,XXX ,M(MACRO_QWERTY)
                            ,Key_VolumeDown,Key_DownArrow ,Key_UpArrow   ,XXX ,MoveToLayer(UPPER)
        ,XXX                ,Key_Mute      ,Key_LeftArrow ,Key_RightArrow,XXX ,MoveToLayer(NUM)
        ,M(MACRO_QWERTY)    ,XXX           ,XXX           ,XXX           ,XXX ,M(MACRO_QWERTY)
@@ -250,12 +250,21 @@ const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
   return MACRO_NONE;
 }
 
+void tapDanceSpaceModifier(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
+      tapDanceActionKeys(tap_count, tap_dance_action, Key_LeftControl, Key_LeftAlt, LSHIFT(ML(LeftGui, NUM)));
+}
+
 void handleTapDanceSpace(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
   switch (tap_dance_action) {
   case kaleidoscope::plugin::TapDance::ActionType::Hold:
-    tapDanceActionKeys(tap_count, tap_dance_action, Key_LeftControl, Key_LeftAlt, LSHIFT(ML(LeftGui, NUM)));
+    tapDanceSpaceModifier(tap_count, tap_dance_action);
     break;
   case kaleidoscope::plugin::TapDance::ActionType::Interrupt:
+    if (tap_count > 1) {
+      tapDanceSpaceModifier(tap_count, tap_dance_action);
+      break;
+    }
+    // else: fallthrough!
   case kaleidoscope::plugin::TapDance::ActionType::Timeout:
     tapDanceActionKeys(tap_count, tap_dance_action, Key_Space);
     break;
@@ -265,9 +274,9 @@ void handleTapDanceSpace(uint8_t tap_count, kaleidoscope::plugin::TapDance::Acti
 void handleTapDanceEnter(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
   switch (tap_dance_action) {
   case kaleidoscope::plugin::TapDance::ActionType::Hold:
+  case kaleidoscope::plugin::TapDance::ActionType::Interrupt:
     tapDanceActionKeys(tap_count, tap_dance_action, Key_RightControl, Key_RightAlt, ML(LeftGui, NUM));
     break;
-  case kaleidoscope::plugin::TapDance::ActionType::Interrupt:
   case kaleidoscope::plugin::TapDance::ActionType::Timeout:
     tapDanceActionKeys(tap_count, tap_dance_action, Key_Enter);
     break;
@@ -315,7 +324,7 @@ void handleTapDanceNumFun(uint8_t tap_count, kaleidoscope::plugin::TapDance::Act
     break;
   case kaleidoscope::plugin::TapDance::ActionType::Interrupt:
   case kaleidoscope::plugin::TapDance::ActionType::Timeout:
-    tapDanceActionKeys(tap_count, tap_dance_action, Key_0);
+    tapDanceActionKeys(tap_count, tap_dance_action, Key_0, TG(NUM));
     break;
   }
 }
@@ -353,7 +362,7 @@ void setupSpaceCadet() {
     static kaleidoscope::plugin::SpaceCadet::KeyBinding bindings[] = {
       {Key_LeftShift, Key_LeftParen, 120},
       {Key_RightShift, Key_RightParen, 120},
-      {Key_LeftGui, Key_Backspace, 120},
+      {Key_LeftGui, Key_Backspace, 110},
       SPACECADET_MAP_END};
     SpaceCadet.setMap(bindings);
   } else {
@@ -375,7 +384,12 @@ bool AutoShift::isAutoShiftable(Key key) {
 
   // These interfere with TapDance! (TD_Backtick, TD_Backslash)
   Key strippedKey = Key{key.getKeyCode(), KEY_FLAGS};
-  if (strippedKey == Key_Backtick || strippedKey == Key_Backslash || strippedKey == Key_Space || strippedKey == Key_Enter) {
+  if (strippedKey == Key_Backtick || strippedKey == Key_Backslash || strippedKey == Key_Space || strippedKey == Key_Enter || strippedKey == Key_0) {
+    return false;
+  }
+
+  if (Layer.isActive(NOITA))
+  {
     return false;
   }
 
@@ -396,9 +410,9 @@ void setup() {
 
   Layer.move(EEPROMSettings.default_layer());
 
-  TapDance.setTimeout(160);  // -- default is 200...
+  TapDance.setTimeout(145);  // -- default is 200...
   AutoShift.enable(AutoShift.printableKeys());
-  AutoShift.setTimeout(140);
+  AutoShift.setTimeout(145);
 
   setupSpaceCadet();
 }
