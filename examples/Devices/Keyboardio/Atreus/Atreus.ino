@@ -369,7 +369,7 @@ void setupSpaceCadet() {
     static kaleidoscope::plugin::SpaceCadet::KeyBinding bindings[] = {
       {Key_LeftShift, Key_LeftParen, 120},
       {Key_RightShift, Key_RightParen, 120},
-      {Key_LeftControl, Key_Backspace, 120},
+      {Key_LeftControl, Key_Backspace, 110},
       SPACECADET_MAP_END};
     SpaceCadet.setMap(bindings);
   }
@@ -382,9 +382,13 @@ bool AutoShift::isAutoShiftable(Key key) {
     return true;  // I like an easy back-tab, ok?
   }
 
-  // These interfere with TapDance! (TD_Backtick, TD_Backslash)
-  Key strippedKey = Key{key.getKeyCode(), KEY_FLAGS};
-  if (strippedKey == Key_Backtick || strippedKey == Key_Backslash || strippedKey == Key_Space || strippedKey == Key_Enter || strippedKey == Key_0) {
+  // These interfere with TapDance - interrupting keys will get dropped
+  switch (key.getKeyCode()) {
+  case Key_Backtick.getKeyCode():
+  case Key_Backslash.getKeyCode():
+  case Key_Space.getKeyCode():
+  case Key_Enter.getKeyCode():
+  case Key_0.getKeyCode():
     return false;
   }
 
@@ -403,9 +407,7 @@ void setup() {
 
   setDefaultLayerForHostOS();
   // EEPROMKeymap.setup(9);
-
   // DynamicMacros.reserve_storage(48);
-
   // LayerNames.reserve_storage(63);
 
   Layer.move(EEPROMSettings.default_layer());
