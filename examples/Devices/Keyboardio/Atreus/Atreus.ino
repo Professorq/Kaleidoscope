@@ -237,8 +237,8 @@ KALEIDOSCOPE_INIT_PLUGINS(
   // Enables dynamic, Chrysalis-editable macros.
   // DynamicMacros
 
-  TapDance,
-  AutoShift
+  AutoShift,
+  TapDance
 
   // The MouseKeys plugin lets you add keys to your keymap which move the mouse.
   // MouseKeys,
@@ -461,6 +461,13 @@ void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count
   }
 }
 
+// Should these always be in lock-step, or do we need to speed up TapDance without changing AutoShift?
+// SpaceCadet allows for individual key timeouts, but that is limited to a single tap/hold
+void setTimeoutsBasedOnAutoShift(uint8_t milliseconds) {
+  AutoShift.setTimeout(milliseconds); // Default is intolerable 200
+  TapDance.setTimeout(milliseconds - 20); // Tap dance keys need to be faster...
+}
+
 const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
   if (keyToggledOn(event.state)) {
     auto currentLayer = Layer.mostRecent();
@@ -498,14 +505,10 @@ const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
       Layer.deactivate(currentLayer);
       break;
     case MACRO_INCREASE_TIMEOUT:
-      // Should these always be in lock-step, or do we need to speed up TapDance without changing AutoShift?
-      // SpaceCadet allows for individual key timeouts, but that is limited to a single tap/hold
-      TapDance.setTimeout(slower);
-      AutoShift.setTimeout(slower);
+      setTimeoutsBasedOnAutoShift(slower);
       break;
     case MACRO_DECREASE_TIMEOUT:
-      TapDance.setTimeout(faster);
-      AutoShift.setTimeout(faster);
+      setTimeoutsBasedOnAutoShift(faster);
       break;
     case MACRO_TOGGLE_AUTOSHIFT:
       AutoShift.toggle();
@@ -558,13 +561,9 @@ bool AutoShift::isAutoShiftable(Key key) {
 
 void setup() {
   Kaleidoscope.setup();
-
   setDefaultLayerForHostOS();
-
   Layer.move(EEPROMSettings.default_layer());
-
-  AutoShift.setTimeout(135); // Default is intolerable 200
-  TapDance.setTimeout(AutoShift.timeout()); 
+  setTimeoutsBasedOnAutoShift(145);
   AutoShift.enable(AutoShift.printableKeys());
 }
 
