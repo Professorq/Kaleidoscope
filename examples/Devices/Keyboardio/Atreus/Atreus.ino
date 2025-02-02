@@ -318,16 +318,25 @@ void handleTapDanceEnter(uint8_t tap_count, kaleidoscope::plugin::TapDance::Acti
   }
 }
 
+void backtickModifier(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
+  tapDanceActionKeys(tap_count, tap_dance_action, LSHIFT(Key_Backtick), ML(LeftControl, NUM), ML(LeftAlt, NUM));
+}
+
 void handleTapDanceBacktick(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
   switch (tap_dance_action) {
   case kaleidoscope::plugin::TapDance::ActionType::Hold:
     if (tap_count == 4) {  // Beethoven's 5th
       AutoShift.toggle();
     } else {
-      tapDanceActionKeys(tap_count, tap_dance_action, LSHIFT(Key_Backtick), ML(LeftControl, NUM), ML(LeftAlt, NUM));
+      backtickModifier(tap_count, tap_dance_action);
     }
     break;
   case kaleidoscope::plugin::TapDance::ActionType::Interrupt:
+    if (tap_count > 1) {
+      backtickModifier(tap_count, tap_dance_action);
+      break;
+    }
+    // else: fallthrough
   case kaleidoscope::plugin::TapDance::ActionType::Timeout:
     tapDanceActionKeys(tap_count, tap_dance_action, Key_Backtick, Key_Esc, M(MACRO_FORCE_QUIT));
     break;
@@ -336,27 +345,45 @@ void handleTapDanceBacktick(uint8_t tap_count, kaleidoscope::plugin::TapDance::A
   }
 }
 
+void backslashModifier(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
+  tapDanceActionKeys(tap_count, tap_dance_action, LSHIFT(Key_Backslash), LGUI(Key_LeftAlt));
+}
+
 void handleTapDanceBackslash(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
   switch (tap_dance_action) {
   case kaleidoscope::plugin::TapDance::ActionType::Hold:
     if (tap_count == 4) {  // Beethoven's 5th
       toggleHostOsAndReset();
     }
-    tapDanceActionKeys(tap_count, tap_dance_action, LSHIFT(Key_Backslash), LGUI(Key_LeftAlt));
+    backslashModifier(tap_count, tap_dance_action);
     break;
   case kaleidoscope::plugin::TapDance::ActionType::Interrupt:
+    if (tap_count > 1) {
+      backslashModifier(tap_count, tap_dance_action);
+      break;
+    }
+    // else: fallthrough
   case kaleidoscope::plugin::TapDance::ActionType::Timeout:
     tapDanceActionKeys(tap_count, tap_dance_action, Key_Backslash, Key_CapsLock);
     break;
   }
 }
 
+void numfunModifier(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
+  tapDanceActionKeys(tap_count, tap_dance_action, MO(NUM), ML(LeftShift, NUM), LSHIFT(ML(LeftGui, NUM)));
+}
+
 void handleTapDanceNumFun(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
   switch (tap_dance_action) {
   case kaleidoscope::plugin::TapDance::ActionType::Hold:
-    tapDanceActionKeys(tap_count, tap_dance_action, MO(NUM), MO(FUN));
+    numfunModifier(tap_count, tap_dance_action);
     break;
   case kaleidoscope::plugin::TapDance::ActionType::Interrupt:
+    if (tap_count > 1) {
+      numfunModifier(tap_count, tap_dance_action);
+      break;
+    }
+    // else: fallthrough
   case kaleidoscope::plugin::TapDance::ActionType::Timeout:
     tapDanceActionKeys(tap_count, tap_dance_action, Key_0, TG(NUM));
     break;
@@ -406,8 +433,10 @@ void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count
   case RTHUMBOUT:
     switch (tap_dance_action) {
     case kaleidoscope::plugin::TapDance::Hold:
+      tapDanceActionKeys(tap_count, tap_dance_action, LSHIFT(Key_Tab));
+      break;
     case kaleidoscope::plugin::TapDance::Timeout:
-      tapDanceActionKeys(tap_count, tap_dance_action, Key_Tab, LSHIFT(Key_Tab));
+      tapDanceActionKeys(tap_count, tap_dance_action, Key_Tab);
       break;
     case kaleidoscope::plugin::TapDance::Interrupt:
       tapDanceActionKeys(tap_count, tap_dance_action, Key_RightGui);
@@ -465,7 +494,7 @@ void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count
 // SpaceCadet allows for individual key timeouts, but that is limited to a single tap/hold
 void setTimeoutsBasedOnAutoShift(uint8_t milliseconds) {
   AutoShift.setTimeout(milliseconds); // Default is intolerable 200
-  TapDance.setTimeout(milliseconds - 20); // Tap dance keys need to be faster...
+  TapDance.setTimeout(milliseconds - 15); // Tap dance keys need to be faster...
 }
 
 const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
