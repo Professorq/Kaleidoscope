@@ -91,9 +91,9 @@ enum {
   NOITA
 };
 
-#define TAP_SLOW        M(MACRO_INCREASE_TIMEOUT)
-#define TAP_FAST        M(MACRO_DECREASE_TIMEOUT)
-#define TG_AUTO         M(MACRO_TOGGLE_AUTOSHIFT)
+#define TAP_SLOW M(MACRO_INCREASE_TIMEOUT)
+#define TAP_FAST M(MACRO_DECREASE_TIMEOUT)
+#define TG_AUTO  M(MACRO_TOGGLE_AUTOSHIFT)
 
 // Tap Dance layer customizations
 enum {
@@ -278,7 +278,7 @@ void toggleHostOsAndReset() {
 }
 
 void tapDanceSpaceModifier(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
-      tapDanceActionKeys(tap_count, tap_dance_action, Key_LeftControl, Key_LeftAlt, LSHIFT(ML(LeftGui, NUM)));
+  tapDanceActionKeys(tap_count, tap_dance_action, Key_LeftControl, Key_LeftAlt, LSHIFT(ML(LeftGui, NUM)));
 }
 
 void handleTapDanceSpace(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
@@ -395,24 +395,23 @@ void backspaceModifier(uint8_t tap_count, kaleidoscope::plugin::TapDance::Action
 }
 
 void handleTapDanceBackspace(uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
-    switch (tap_dance_action) {
-    case kaleidoscope::plugin::TapDance::Hold:
+  switch (tap_dance_action) {
+  case kaleidoscope::plugin::TapDance::Hold:
+    backspaceModifier(tap_count, tap_dance_action);
+    break;
+  case kaleidoscope::plugin::TapDance::Interrupt:
+    if (tap_count > 1) {
       backspaceModifier(tap_count, tap_dance_action);
       break;
-    case kaleidoscope::plugin::TapDance::Interrupt:
-      if (tap_count > 1) {
-	backspaceModifier(tap_count, tap_dance_action);
-	break;
-      }
-      // else fallthrough
-    case kaleidoscope::plugin::TapDance::Timeout:
-      tapDanceActionKeys(tap_count, tap_dance_action, Key_Backspace);
-      break;
     }
+    // else fallthrough
+  case kaleidoscope::plugin::TapDance::Timeout:
+    tapDanceActionKeys(tap_count, tap_dance_action, Key_Backspace);
+    break;
   }
+}
 
-void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count,
-                    kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
+void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count, kaleidoscope::plugin::TapDance::ActionType tap_dance_action) {
   // Immediately cancel any in-progress AutoShift delay
   // If you don't do this, hanging stickiness upper-cases letters at the ends of words
   // before whitespace characters that this configuration uses as TapDance items.
@@ -424,7 +423,7 @@ void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count
   case LTHUMBIN:
     handleTapDanceNumFun(tap_count, tap_dance_action);
     break;
-   case LTHUMBREST:
+  case LTHUMBREST:
     handleTapDanceSpace(tap_count, tap_dance_action);
     break;
   case LTHUMBOUT:
@@ -458,7 +457,7 @@ void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count
     case kaleidoscope::plugin::TapDance::Hold:
       tapDanceActionKeys(tap_count, tap_dance_action, Key_LeftShift);
       break;
-    } 
+    }
     break;
   case RSHIFTP:
     switch (tap_dance_action) {
@@ -469,7 +468,7 @@ void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count
     case kaleidoscope::plugin::TapDance::Hold:
       tapDanceActionKeys(tap_count, tap_dance_action, Key_RightShift);
       break;
-    } 
+    }
     break;
   case TICKESC:
     handleTapDanceBacktick(tap_count, tap_dance_action);
@@ -483,7 +482,7 @@ void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count
     case kaleidoscope::plugin::TapDance::Hold:
       tapDanceActionKeys(tap_count, tap_dance_action, LSHIFT(Key_Backslash), LSHIFT(Key_Backslash), LSHIFT(Key_Backslash), M(MACRO_FORCE_QUIT));
       break;
-    } 
+    }
     break;
   default:
     break;
@@ -493,17 +492,17 @@ void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count
 // Should these always be in lock-step, or do we need to speed up TapDance without changing AutoShift?
 // SpaceCadet allows for individual key timeouts, but that is limited to a single tap/hold
 void setTimeoutsBasedOnAutoShift(uint8_t milliseconds) {
-  AutoShift.setTimeout(milliseconds); // Default is intolerable 200
-  TapDance.setTimeout(milliseconds - 15); // Tap dance keys need to be faster...
+  AutoShift.setTimeout(milliseconds);      // Default is intolerable 200
+  TapDance.setTimeout(milliseconds - 15);  // Tap dance keys need to be faster...
 }
 
 const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
   if (keyToggledOn(event.state)) {
     auto currentLayer = Layer.mostRecent();
-    auto layerUp = min(currentLayer + 1, MAX_ACTIVE_LAYERS);
-    auto layerDown = currentLayer == 0 ? 0 : currentLayer - 1;
-    auto slower = AutoShift.timeout() + 5;
-    auto faster = AutoShift.timeout() - 5;
+    auto layerUp      = min(currentLayer + 1, MAX_ACTIVE_LAYERS);
+    auto layerDown    = currentLayer == 0 ? 0 : currentLayer - 1;
+    auto slower       = AutoShift.timeout() + 5;
+    auto faster       = AutoShift.timeout() - 5;
 
     KeyEvent keyEvent{KeyAddr::none(), IS_PRESSED | INJECTED, Key_Undefined};
 
@@ -544,15 +543,15 @@ const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
       break;
     case MACRO_FORCE_QUIT:
       if (HostOS.os() == kaleidoscope::hostos::WINDOWS) {
-	Macros.press(Key_LeftControl);
-	Macros.press(Key_LeftAlt);
-	Macros.press(Key_Delete);
-	Macros.clear();
+        Macros.press(Key_LeftControl);
+        Macros.press(Key_LeftAlt);
+        Macros.press(Key_Delete);
+        Macros.clear();
       } else {
-	Macros.press(Key_LeftGui);
-	Macros.press(Key_LeftAlt);
-	Macros.press(Key_Esc);
-	Macros.clear();
+        Macros.press(Key_LeftGui);
+        Macros.press(Key_LeftAlt);
+        Macros.press(Key_Esc);
+        Macros.clear();
       }
       break;
     default:
@@ -578,8 +577,7 @@ bool AutoShift::isAutoShiftable(Key key) {
     return false;
   }
 
-  if (Layer.isActive(NOITA))
-  {
+  if (Layer.isActive(NOITA)) {
     return false;
   }
 
