@@ -139,7 +139,7 @@ KEYMAPS(
   (
        M(MACRO_QWERTY),Key_Home  ,Key_UpArrow             ,Key_End                 ,Key_PageUp
       ,TAP_FAST   ,Key_LeftArrow ,Key_DownArrow           ,Key_RightArrow          ,Key_PageDown
-      ,TAP_SLOW   ,TG_AUTO       ,Consumer_VolumeIncrement,Consumer_VolumeDecrement,Consumer_Mute ,___
+      ,TAP_SLOW   ,TG_AUTO       ,Consumer_VolumeDecrement,Consumer_VolumeIncrement,Consumer_Mute ,___
       ,___        ,___           ,___                     ,M(MACRO_QWERTY)         ,___           ,___
 
             ,Key_Quote ,Key_7 ,Key_8      ,Key_9 ,M(MACRO_QWERTY)
@@ -432,13 +432,13 @@ void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count
   case RTHUMBOUT:
     switch (tap_dance_action) {
     case kaleidoscope::plugin::TapDance::Hold:
-      tapDanceActionKeys(tap_count, tap_dance_action, LSHIFT(Key_Tab));
+      tapDanceActionKeys(tap_count, tap_dance_action, LSHIFT(Key_Tab), LCTRL(Key_LeftAlt));
       break;
     case kaleidoscope::plugin::TapDance::Timeout:
       tapDanceActionKeys(tap_count, tap_dance_action, Key_Tab);
       break;
     case kaleidoscope::plugin::TapDance::Interrupt:
-      tapDanceActionKeys(tap_count, tap_dance_action, Key_RightGui);
+      tapDanceActionKeys(tap_count, tap_dance_action, LCTRL(Key_LeftAlt));
       break;
     }
     break;
@@ -493,7 +493,7 @@ void tapDanceAction(uint8_t tap_dance_index, KeyAddr key_addr, uint8_t tap_count
 // SpaceCadet allows for individual key timeouts, but that is limited to a single tap/hold
 void setTimeoutsBasedOnAutoShift(uint8_t milliseconds) {
   AutoShift.setTimeout(milliseconds);      // Default is intolerable 200
-  TapDance.setTimeout(milliseconds - 15);  // Tap dance keys need to be faster...
+  TapDance.setTimeout(milliseconds - 10);  // Tap dance keys need to be faster...
 }
 
 const macro_t *macroAction(uint8_t macro_id, KeyEvent &event) {
